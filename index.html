@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ 
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -25,77 +25,3 @@
         }
         #dataList li {
             border: 1px solid #ddd;
-            margin-top: -1px; /* لمنع الحدود المزدوجة */
-            background-color: #f6f6f6;
-            padding: 12px;
-            font-size: 18px;
-        }
-        #dataList li.hidden {
-            display: none; /* إخفاء العنصر الذي لا يتطابق مع البحث */
-        }
-    </style>
-</head>
-<body>
-
-    <h2>ابحث عن دورة برمجية</h2>
-    <input type="text" id="searchInput" onkeyup="filterFunction()" placeholder="اكتب اسم الدورة...">
-
-    <ul id="dataList">
-        <li>بايثون (Python)</li>
-        <li>جافاسكريبت (JavaScript)</li>
-        <li>جافا (Java)</li>
-        <li>سي بلس بلس (C++)</li>
-        <li>قواعد بيانات SQL</li>
-        <li>تطوير واجهات الويب (HTML & CSS)</li>
-        <li>تطوير تطبيقات أندرويد</li>
-        <li>تطوير تطبيقات آيفون (iOS)</li>
-    </ul>
-
-<script>
-function filterFunction() {
-    // الحصول على عناصر الصفحة اللازمة
-    var input, filter, ul, li, i, txtValue;
-    input = document.getElementById('searchInput');
-    filter = input.value.toUpperCase(); // تحويل النص لحروف كبيرة لتسهيل المقارنة
-    ul = document.getElementById("dataList");
-    li = ul.getElementsByTagName('li');
-
-    // المرور على كل عناصر القائمة
-    for (i = 0; i < li.length; i++) {
-        txtValue = li[i].textContent || li[i].innerText;
-        // إذا كان النص موجوداً في عنصر القائمة، أظهره
-        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            li[i].classList.remove('hidden');
-        } else {
-            // وإلا، أخفِه
-            li[i].classList.add('hidden');
-        }
-    }
-}
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>استيراد بيانات من API</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>البحث عن مقالات</h1>
-    <div class="search-container">
-        <input type="text" id="apiSearchInput" placeholder="ابحث عن كلمة...">
-        <button id="searchButton">بحث</button>
-    </div>
-
-    <div id="resultsContainer">
-        <p>سيتم عرض النتائج هنا...</p>
-    </div>
-
-    <script src="script.js"></script>
-</body>
-</html>
-
-</script>
-
-</body>
-</html>
