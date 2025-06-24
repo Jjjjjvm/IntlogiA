@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>باحث | أداة بحث بتصميم عصري</title>
+    <title>باحث | إجابات مباشرة</title>
 
     <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -39,6 +39,9 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .whitespace-pre-line {
+            white-space: pre-line;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -54,7 +57,7 @@
                 <input
                     type="search"
                     id="searchInput"
-                    placeholder="ابحث في الإنترنت باستخدام الذكاء الاصطناعي"
+                    placeholder="اسأل أي شيء أو ابحث عن موضوع..."
                     class="w-full px-4 py-3 pl-12 bg-white border-2 border-gray-200 rounded-full focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300"
                 />
                 <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -96,8 +99,7 @@
         </div>
     </div>
 
-
-    <!-- Template for a single result card (Modern Card Style) -->
+    <!-- Template for a single SOURCE card (Modern Card Style) -->
     <template id="resultCardTemplate">
         <div class="bg-white border border-gray-200 rounded-lg p-6 mb-5 shadow-sm hover:shadow-lg transition-shadow duration-300 animate-fade-in">
             <h3 class="text-xl font-bold text-gray-900 mb-2">
@@ -152,9 +154,6 @@
 
         // --- Functions ---
         async function performSearch() {
-            // --- تعديل مهم ---
-            // الصق مفتاح API الخاص بك هنا مباشرةً
-            // يمكنك الحصول على مفتاح مجاني من Google AI Studio
             const apiKey = "AIzaSyCV1gRm3NrvItT-8XetEXu12lKTB2eZ9bI"; // <--- ضع المفتاح هنا
 
             if (apiKey === "YOUR_API_KEY_HERE") {
@@ -173,7 +172,23 @@
                 spinnerContainer.classList.add('hidden');
                 return;
             }
-            const prompt = `Please act as a web search engine. Provide the top 5 search results for the query: "${query}". Return the results as a valid JSON array where each object has the following keys: "title", "url", and "snippet". Ensure the URL is a simple, clean base URL.`;
+
+            // --- Updated Prompt ---
+            const prompt = `
+                Please act as a concise and helpful AI assistant.
+                First, provide a direct, summarized answer to the following user query: "${query}".
+                Then, provide a list of the top 3-4 relevant websites as sources for your answer.
+                Return the entire response as a single, valid JSON object with this exact structure:
+                {
+                  "answer": "Your direct and summarized answer goes here. If you cannot provide a direct answer, this field should be an empty string.",
+                  "sources": [
+                    { "title": "Source Title 1", "url": "https://source.url/1", "snippet": "A brief summary of this source." },
+                    { "title": "Source Title 2", "url": "https://source.url/2", "snippet": "A brief summary of this source." }
+                  ]
+                }
+                Do not include any text, notes, or markdown formatting outside of the main JSON object.
+            `;
+
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -197,50 +212,64 @@
             }
         }
 
-        function displayResults(query, results) {
+        // --- Updated displayResults function ---
+        function displayResults(query, data) {
             resultsContainer.innerHTML = '';
-            if (!results || results.length === 0) {
-                resultsContainer.innerHTML = `<div class="text-center text-gray-500 py-10"><p>لم يتم العثور على نتائج للبحث عن: "${query}"</p></div>`;
-                return;
-            }
-            const resultsInfo = document.createElement('p');
-            resultsInfo.className = "text-sm text-gray-500 mb-4";
-            resultsInfo.textContent = `تم العثور على حوالي ${results.length} من النتائج`;
-            resultsContainer.appendChild(resultsInfo);
 
-            results.forEach(item => {
-                const card = cardTemplate.content.cloneNode(true);
-                const titleLink = card.querySelector('[data-template-title]');
-                const urlElement = card.querySelector('[data-template-url]');
-                const snippetElement = card.querySelector('[data-template-snippet]');
-                titleLink.textContent = item.title;
-                titleLink.href = item.url;
-                urlElement.textContent = item.url;
-                snippetElement.textContent = item.snippet;
-                resultsContainer.appendChild(card);
-            });
+            const hasAnswer = data.answer && data.answer.trim() !== "";
+            const hasSources = data.sources && data.sources.length > 0;
+
+            // 1. Display the direct answer if it exists
+            if (hasAnswer) {
+                const answerCard = document.createElement('div');
+                answerCard.className = "bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6 animate-fade-in";
+                answerCard.innerHTML = `
+                    <h2 class="text-xl font-bold text-gray-800 mb-3">إجابة مباشرة</h2>
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-line">${data.answer}</p>
+                `;
+                resultsContainer.appendChild(answerCard);
+            }
+
+            // 2. Display the sources if they exist
+            if (hasSources) {
+                const sourcesHeader = document.createElement('h2');
+                sourcesHeader.className = "text-lg font-semibold text-gray-600 mb-4";
+                sourcesHeader.textContent = hasAnswer ? 'المصادر' : 'نتائج الويب المقترحة';
+                resultsContainer.appendChild(sourcesHeader);
+
+                data.sources.forEach(item => {
+                    const card = cardTemplate.content.cloneNode(true);
+                    const titleLink = card.querySelector('[data-template-title]');
+                    const urlElement = card.querySelector('[data-template-url]');
+                    const snippetElement = card.querySelector('[data-template-snippet]');
+                    
+                    titleLink.textContent = item.title;
+                    titleLink.href = item.url;
+                    urlElement.textContent = item.url;
+                    snippetElement.textContent = item.snippet;
+                    
+                    resultsContainer.appendChild(card);
+                });
+            } else if (!hasAnswer) {
+                // Handle case where there's no answer AND no sources
+                showErrorMessage(`لم يتم العثور على نتائج للبحث عن: "${query}"`);
+            }
         }
         
         function openWebsiteInModal(url) {
             modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Prevent background scroll
-
-            // Reset modal state
+            document.body.style.overflow = 'hidden';
             modalLoader.classList.remove('hidden');
             modalActions.classList.add('hidden');
             iframe.classList.add('opacity-0');
             iframeBlockerMessage.classList.add('hidden');
-            
             newTabLink.href = url;
             iframe.src = url;
-
             iframe.onload = () => {
                 modalLoader.classList.add('hidden');
                 modalActions.classList.remove('hidden');
                 iframe.classList.remove('opacity-0');
             };
-            
-            // Fallback for sites that block iframing
             iframe.onerror = () => {
                 modalLoader.classList.add('hidden');
                 modalActions.classList.remove('hidden');
@@ -251,8 +280,8 @@
 
         function closeModal() {
             modal.classList.add('hidden');
-            document.body.style.overflow = ''; // Restore background scroll
-            iframe.src = 'about:blank'; // Stop loading content
+            document.body.style.overflow = '';
+            iframe.src = 'about:blank';
         }
 
         function showErrorMessage(message) {
