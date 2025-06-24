@@ -1,27 +1,254 @@
- 
+ <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بحث في الصفحة</title>
+    <title>باحث | أداة بحث بتصميم عصري</title>
+
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts for better typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
-        /* CSS لتنسيق بسيط */
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f8fa;
         }
-        #searchInput {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        #dataList {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
         }
-        #dataList li {
-            border: 1px solid #ddd;
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 5px solid #e0e0e0;
+            border-top: 5px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl min-h-screen flex flex-col">
+
+        <!-- Header Section -->
+        <header class="pt-12 pb-8 text-center shrink-0">
+            <h1 class="text-5xl font-bold text-gray-800 mb-8">
+                باحث
+            </h1>
+            <div class="relative w-full mx-auto">
+                <input
+                    type="search"
+                    id="searchInput"
+                    placeholder="ابحث في الإنترنت باستخدام الذكاء الاصطناعي"
+                    class="w-full px-4 py-3 pl-12 bg-white border-2 border-gray-200 rounded-full focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300"
+                />
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                </div>
+                <div id="spinner-container" class="absolute inset-y-0 right-0 flex items-center pr-4 hidden">
+                    <div class="spinner !w-6 !h-6 !border-4"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Results Section -->
+        <main id="resultsContainer" class="flex-grow py-4">
+             <!-- Results will be dynamically inserted here -->
+        </main>
+
+    </div>
+
+    <!-- Modal for displaying websites -->
+    <div id="website-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-full flex flex-col">
+            <header class="p-3 border-b flex justify-between items-center bg-gray-50 rounded-t-lg shrink-0">
+                <div id="modal-loader" class="flex items-center">
+                    <div class="spinner !w-5 !h-5 !border-2 mr-3"></div>
+                    <span class="text-gray-600 text-sm">جاري تحميل الموقع...</span>
+                </div>
+                <div id="modal-actions" class="hidden flex items-center">
+                     <a id="open-new-tab-link" href="#" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 hover:underline">فتح في علامة تبويب جديدة</a>
+                </div>
+                <button id="close-modal-btn" class="text-3xl text-gray-500 hover:text-gray-900 transition-colors">&times;</button>
+            </header>
+            <main class="flex-grow relative">
+                <iframe id="website-iframe" class="w-full h-full border-0" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+                <div id="iframe-blocker-message" class="hidden absolute inset-0 bg-white flex flex-col items-center justify-center text-center p-8">
+                     <h3 class="text-xl font-bold text-gray-700">تعذّر عرض هذا الموقع</h3>
+                     <p class="text-gray-500 mt-2">بعض المواقع تمنع عرضها ضمن صفحات أخرى لأسباب تتعلق بالحماية. يمكنك فتحه مباشرةً في علامة تبويب جديدة.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <!-- Template for a single result card (Modern Card Style) -->
+    <template id="resultCardTemplate">
+        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-5 shadow-sm hover:shadow-lg transition-shadow duration-300 animate-fade-in">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">
+                <a href="#" class="result-link hover:text-blue-600 transition-colors" data-template-title></a>
+            </h3>
+            <p class="text-gray-600 leading-relaxed" data-template-snippet></p>
+            <div class="mt-4 pt-4 border-t border-gray-100 flex items-center">
+                 <svg class="w-4 h-4 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                <p class="text-sm text-gray-500 break-all" data-template-url></p>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const cardTemplate = document.getElementById('resultCardTemplate');
+        const spinnerContainer = document.getElementById('spinner-container');
+        const modal = document.getElementById('website-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const iframe = document.getElementById('website-iframe');
+        const newTabLink = document.getElementById('open-new-tab-link');
+        const modalLoader = document.getElementById('modal-loader');
+        const modalActions = document.getElementById('modal-actions');
+        const iframeBlockerMessage = document.getElementById('iframe-blocker-message');
+
+        // State
+        const searchCache = {};
+        let debounceTimer;
+
+        // Event Listeners
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(performSearch, 500);
+        });
+        
+        resultsContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('result-link')) {
+                event.preventDefault();
+                const url = event.target.href;
+                openWebsiteInModal(url);
+            }
+        });
+
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Functions
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (query.length < 3) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+            spinnerContainer.classList.remove('hidden');
+            if (searchCache[query]) {
+                displayResults(query, searchCache[query]);
+                spinnerContainer.classList.add('hidden');
+                return;
+            }
+            const prompt = `Please act as a web search engine. Provide the top 5 search results for the query: "${query}". Return the results as a valid JSON array where each object has the following keys: "title", "url", and "snippet". Ensure the URL is a simple, clean base URL.`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API request failed`);
+                const result = await response.json();
+                if (result.candidates && result.candidates[0] && result.candidates[0].content.parts[0]) {
+                    const jsonString = result.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '');
+                    const searchResults = JSON.parse(jsonString);
+                    searchCache[query] = searchResults;
+                    displayResults(query, searchResults);
+                } else {
+                    throw new Error("Invalid response structure.");
+                }
+            } catch (error) {
+                console.error("Search Error:", error);
+                showErrorMessage("حدث خطأ أثناء البحث. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                spinnerContainer.classList.add('hidden');
+            }
+        }
+
+        function displayResults(query, results) {
+            resultsContainer.innerHTML = '';
+            if (!results || results.length === 0) {
+                resultsContainer.innerHTML = `<div class="text-center text-gray-500 py-10"><p>لم يتم العثور على نتائج للبحث عن: "${query}"</p></div>`;
+                return;
+            }
+            const resultsInfo = document.createElement('p');
+            resultsInfo.className = "text-sm text-gray-500 mb-4";
+            resultsInfo.textContent = `تم العثور على حوالي ${results.length} من النتائج`;
+            resultsContainer.appendChild(resultsInfo);
+
+            results.forEach(item => {
+                const card = cardTemplate.content.cloneNode(true);
+                const titleLink = card.querySelector('[data-template-title]');
+                const urlElement = card.querySelector('[data-template-url]');
+                const snippetElement = card.querySelector('[data-template-snippet]');
+                titleLink.textContent = item.title;
+                titleLink.href = item.url;
+                urlElement.textContent = item.url;
+                snippetElement.textContent = item.snippet;
+                resultsContainer.appendChild(card);
+            });
+        }
+        
+        function openWebsiteInModal(url) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+
+            // Reset modal state
+            modalLoader.classList.remove('hidden');
+            modalActions.classList.add('hidden');
+            iframe.classList.add('opacity-0');
+            iframeBlockerMessage.classList.add('hidden');
+            
+            newTabLink.href = url;
+            iframe.src = url;
+
+            iframe.onload = () => {
+                modalLoader.classList.add('hidden');
+                modalActions.classList.remove('hidden');
+                iframe.classList.remove('opacity-0');
+            };
+            
+            // Fallback for sites that block iframing
+            iframe.onerror = () => {
+                modalLoader.classList.add('hidden');
+                modalActions.classList.remove('hidden');
+                iframe.classList.add('opacity-0');
+                iframeBlockerMessage.classList.remove('hidden');
+            };
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Restore background scroll
+            iframe.src = 'about:blank'; // Stop loading content
+        }
+
+        function showErrorMessage(message) {
+            resultsContainer.innerHTML = `<div class="text-center text-red-600 bg-red-100 p-4 rounded-lg"><p>${message}</p></div>`;
+        }
+    </script>
+</body>
+</html>
