@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -129,7 +129,7 @@
         const searchCache = {};
         let debounceTimer;
 
-        // Event Listeners
+        // --- Event Listeners ---
         searchInput.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(performSearch, 500);
@@ -150,8 +150,18 @@
             }
         });
 
-        // Functions
+        // --- Functions ---
         async function performSearch() {
+            // --- تعديل مهم ---
+            // الصق مفتاح API الخاص بك هنا مباشرةً
+            // يمكنك الحصول على مفتاح مجاني من Google AI Studio
+            const apiKey = "AIzaSyCV1gRm3NrvItT-8XetEXu12lKTB2eZ9bI"; // <--- ضع المفتاح هنا
+
+            if (apiKey === "YOUR_API_KEY_HERE") {
+                showErrorMessage('الرجاء تحرير الكود البرمجي ووضع مفتاح API الخاص بك.');
+                return;
+            }
+
             const query = searchInput.value.trim();
             if (query.length < 3) {
                 resultsContainer.innerHTML = '';
@@ -165,7 +175,6 @@
             }
             const prompt = `Please act as a web search engine. Provide the top 5 search results for the query: "${query}". Return the results as a valid JSON array where each object has the following keys: "title", "url", and "snippet". Ensure the URL is a simple, clean base URL.`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             try {
@@ -182,7 +191,7 @@
                 }
             } catch (error) {
                 console.error("Search Error:", error);
-                showErrorMessage("حدث خطأ أثناء البحث. الرجاء المحاولة مرة أخرى.");
+                showErrorMessage("حدث خطأ أثناء البحث. تأكد من أن مفتاح API الخاص بك صالح وأن الشبكة تعمل.");
             } finally {
                 spinnerContainer.classList.add('hidden');
             }
